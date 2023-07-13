@@ -5,11 +5,15 @@ description = "Move action for prepare assignment"
 authors = ["Bonajo <m.bonajo@fontys.nl>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "prepare_move"}]
+#packages = [{include = "prepare_move"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+prepare-toolbox = "^0.1.0"
 
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.0"
 
 [build-system]
 requires = ["poetry-core"]
