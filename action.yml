@@ -1,0 +1,23 @@
+id: "move"
+name: "Move"
+description: "Move files"
+inputs:
+  source:
+    description: "Files to move"
+    required: true
+    type: "array"
+    items: "string"
+  destination:
+    description: "Destination to move to"
+    required: true
+  force:
+    description: "Force the move (overwrite)"
+    type: boolean
+    default: true
+  recursive:
+    description: "Whether to recursively move all subdirectories"
+    type: boolean
+    default: false
+runs:
+  using: "python"
+  main: "main.py"
