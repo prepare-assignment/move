@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "prepare-move"
+version = "0.1.0"
+description = "Move action for prepare assignment"
+authors = ["Bonajo <m.bonajo@fontys.nl>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "prepare_move"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
