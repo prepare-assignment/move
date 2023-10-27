@@ -3,10 +3,8 @@ name: "Move"
 description: "Move files"
 inputs:
   source:
-    description: "Files to move"
+    description: "File to move (glob)"
     required: true
-    type: "array"
-    items: "string"
   destination:
     description: "Destination to move to"
     required: true
@@ -14,10 +12,11 @@ inputs:
     description: "Force the move (overwrite)"
     type: boolean
     default: true
-  recursive:
-    description: "Whether to recursively move all subdirectories"
-    type: boolean
-    default: false
+outputs:
+  paths:
+    description: The new paths
+    type: array
+    items: string
 runs:
   using: "python"
-  main: "main.py"
+  main: "move/main.py"
