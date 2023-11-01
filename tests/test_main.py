@@ -1,6 +1,8 @@
 import os
+import sys
 import tempfile
 from pathlib import Path
+import time
 from typing import List
 
 import pytest
@@ -70,11 +72,14 @@ def test_move_success(source: str,
             return force
 
     mocker.patch('move.main.get_input', side_effect=__get_input)
-    spy = mocker.spy(main, "set_output")
+    spy = mocker.patch("move.main.set_output")
+    old_cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as tempdir:
         monkeypatch.chdir(tempdir)
         setup_temp(tempdir)
         move()
+        # We need to do this otherwise it won't work on Windows......
+        monkeypatch.chdir(old_cwd)
     spy.assert_called_once_with("paths", expected)
 
 
@@ -101,12 +106,15 @@ def test_move_fail(source: str,
             return force
 
     mocker.patch('move.main.get_input', side_effect=__get_input)
+    #spy = mocker.patch("move.main.set_failed", side_effect=SystemExit())
     spy = mocker.spy(main, "set_failed")
+    old_cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as tempdir:
         monkeypatch.chdir(tempdir)
         setup_temp(tempdir)
         with pytest.raises(SystemExit):
             move()
+        monkeypatch.chdir(old_cwd)
     spy.assert_called_once()
 
 
