@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import shutil
 from typing import List
 
@@ -11,7 +12,7 @@ def move() -> None:
         # source glob(s) to match
         source = get_input("source")
         # destination glob to match
-        destination = get_input("destination")
+        destination = str(Path(get_input("destination")))
         # ignore nonexistent files and arguments
         force = get_input("force")
 
