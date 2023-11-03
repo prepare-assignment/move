@@ -12,6 +12,10 @@ inputs:
     description: "Force the move (overwrite)"
     type: boolean
     default: true
+  allow-outside-working-directory:
+    description: "Allow destination/matched files to be outside the working directory"
+    type: boolean
+    default: false
 outputs:
   paths:
     description: The new paths

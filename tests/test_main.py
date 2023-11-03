@@ -68,8 +68,10 @@ def test_move_success(source: str,
             return source
         elif key == "destination":
             return destination
-        else:
+        elif key == "force":
             return force
+        else:
+            return False
 
     mocker.patch('move.main.get_input', side_effect=__get_input)
     spy = mocker.patch("move.main.set_output")
@@ -84,26 +86,29 @@ def test_move_success(source: str,
 
 
 @pytest.mark.parametrize(
-    "source, destination, force",
+    "source, destination, force, allow_outside",
     [
-        ("test.txt", "in/a.txt", False),  # destination already exists
-        ("a.txt", "in", False),  # file already exists in destination directory
-        ("d.txt", "in", False),  # file doesn't exist
+        ("test.txt", "in/a.txt", False, False),  # destination already exists
+        ("a.txt", "in", False, False),  # file already exists in destination directory
+        ("d.txt", "in", False, False),  # file doesn't exist
+        ("a.txt", "..", True, False)
     ]
 )
 def test_move_fail(source: str,
                    destination: str,
                    force: bool,
+                   allow_outside: bool,
                    monkeypatch: MonkeyPatch,
-                   mocker: MockerFixture,
-                   capsys: pytest.CaptureFixture) -> None:
+                   mocker: MockerFixture) -> None:
     def __get_input(key: str):
         if key == "source":
             return source
         elif key == "destination":
             return destination
-        else:
+        elif key == "force":
             return force
+        else:
+            return allow_outside
 
     mocker.patch('move.main.get_input', side_effect=__get_input)
     #spy = mocker.patch("move.main.set_failed", side_effect=SystemExit())
