@@ -9,7 +9,7 @@ packages = [{include = "move"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-prepare-toolbox = "0.3.0"
+prepare-toolbox = "0.4.0"
 
 
 [tool.poetry.group.test.dependencies]
