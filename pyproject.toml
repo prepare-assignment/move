@@ -1,23 +1,23 @@
-[tool.poetry]
+[project]
 name = "move"
 version = "0.1.0"
 description = "Move action for prepare assignment"
-authors = ["Bonajo <m.bonajo@fontys.nl>"]
-license = "MIT"
+authors = [{ name = "Bonajo", email = "m.bonajo@fontys.nl" }]
+license = { text = "MIT" }
 readme = "README.md"
-packages = [{include = "move"}]
+requires-python = ">=3.9"
+dependencies = [
+    "prepare-toolbox>=0.4.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-prepare-toolbox = "0.4.0"
-
-
-[tool.poetry.group.test.dependencies]
-pytest = "^7.4.0"
-pytest-mock = "^3.12.0"
-pytest-cov = "^4.1.0"
-mypy = "^1.6.1"
+[dependency-groups]
+test = [
+    "pytest>=7.4.0",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.6.1",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
