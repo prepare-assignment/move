@@ -39,3 +39,18 @@ paths:
 - `files`: The new path(s) of moved files/directories
 
 * > :warning: If a directory is moved, it will only list the new directory path, not all sub files/directories.
+
+## Releases
+
+Releases are automated with [semantic-release](https://semantic-release.gitbook.io/). Pull requests are squash merged, so the PR title becomes the commit on `main` and must follow [Conventional Commits](https://www.conventionalcommits.org/) (checked on every PR):
+
+| PR title | Release |
+|----------|---------|
+| `fix: ...`, `perf: ...` | patch (1.2.3 → 1.2.4) |
+| `feat: ...` | minor (1.2.3 → 1.3.0) |
+| `!` after the type (e.g. `feat!: ...`, `refactor!: ...`) or a `BREAKING CHANGE:` footer | major (1.2.3 → 2.0.0) |
+| `docs:`, `chore:`, `ci:`, `build:`, `refactor:`, `test:`, `style:`, `revert:` | no release |
+
+On every merge to `main` the next version is determined, tagged (`vX.Y.Z`) and a GitHub release is created. The major tag (e.g. `v1`) is moved to the new release, so `uses: move@v1` always gets the newest 1.x version.
+
+Because the major tag moves, `git pull` in an existing clone can fail with `! [rejected] v1 -> v1 (would clobber existing tag)`. Update the tags once with `git fetch --tags --force` and pull again.
