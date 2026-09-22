@@ -1,5 +1,5 @@
 [project]
-name = "move"
+name = "prepare-move"
 version = "0.1.0"
 description = "Move action for prepare assignment"
 authors = [{ name = "Bonajo", email = "m.bonajo@fontys.nl" }]

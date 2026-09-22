@@ -23,4 +23,4 @@ outputs:
     items: string
 runs:
   using: "python"
-  main: "move/main.py"
+  main: "prepare_move/main.py"

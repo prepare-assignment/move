@@ -9,8 +9,8 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from pytest_mock import MockerFixture
 
-from move import main
-from move.main import move
+from prepare_move import main
+from prepare_move.main import move
 
 
 def setup_temp(path: str) -> None:
@@ -73,8 +73,8 @@ def test_move_success(source: str,
         else:
             return False
 
-    mocker.patch('move.main.get_input', side_effect=__get_input)
-    spy = mocker.patch("move.main.set_output")
+    mocker.patch('prepare_move.main.get_input', side_effect=__get_input)
+    spy = mocker.patch("prepare_move.main.set_output")
     old_cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as tempdir:
         monkeypatch.chdir(tempdir)
@@ -110,8 +110,8 @@ def test_move_fail(source: str,
         else:
             return allow_outside
 
-    mocker.patch('move.main.get_input', side_effect=__get_input)
-    #spy = mocker.patch("move.main.set_failed", side_effect=SystemExit())
+    mocker.patch('prepare_move.main.get_input', side_effect=__get_input)
+    #spy = mocker.patch("prepare_move.main.set_failed", side_effect=SystemExit())
     spy = mocker.spy(main, "set_failed")
     old_cwd = os.getcwd()
     with tempfile.TemporaryDirectory() as tempdir:
@@ -127,7 +127,7 @@ def test_other_exception(mocker: MockerFixture) -> None:
     def __get_input():
         raise Exception("test")
 
-    mocker.patch('move.main.get_input', side_effect=__get_input)
+    mocker.patch('prepare_move.main.get_input', side_effect=__get_input)
     spy = mocker.spy(main, "set_failed")
     with pytest.raises(SystemExit):
         move()
