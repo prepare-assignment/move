@@ -1,0 +1,24 @@
+name: Semantic release
+
+# Releases are tags (vX.Y.Z, plus the major tag vX that is moved along) and GitHub releases, created by the
+# shared release workflow. Tasks are not published to PyPI: core clones them from GitHub.
+on:
+  push:
+    branches: [main]
+
+# Never cancel a release mid-flight: a half-run that has tagged but not yet
+# moved the major tag would need cleaning up by hand.
+concurrency:
+  group: semantic-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    uses: prepare-assignment/actions-ci/.github/workflows/release.yml@main
+    permissions:
+      contents: write # create the tags and the GitHub release
+      issues: write # comment "released in vX.Y.Z" on issues
+      pull-requests: write # and on the PRs that fed the release
