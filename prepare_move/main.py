@@ -45,14 +45,24 @@ def move() -> None:
             set_failed(f"'{source}' matches {len(files)} files, the destination "
                        f"'{Path(destination).as_posix()}' must be an existing directory")
         for path in files:
-            if os.path.isfile(path):
-                if os.path.isdir(destination):
-                    new_path = os.path.join(destination, os.path.basename(path))
+            # Into the destination if it's a directory, otherwise to the destination itself (rename)
+            if os.path.isdir(destination):
+                new_path = os.path.join(destination, os.path.basename(os.path.normpath(path)))
+            else:
+                new_path = destination
+            if os.path.exists(new_path):
+                if not force:
+                    set_failed(f"'{Path(new_path).as_posix()}' already exists, use 'force' to overwrite")
+                # Like mv: never replace a directory with a file or the other way round
+                if os.path.isdir(new_path) != os.path.isdir(path):
+                    kind = "a directory" if os.path.isdir(new_path) else "a file"
+                    set_failed(f"Cannot overwrite '{Path(new_path).as_posix()}', it is {kind}")
+                # shutil.move doesn't overwrite an existing path, remove it first
+                if os.path.isdir(new_path) and not os.path.islink(new_path):
+                    shutil.rmtree(new_path)
                 else:
-                    new_path = destination
-                if os.path.exists(new_path) and not force:
-                    set_failed(f"'{new_path}' already exists, use 'force' to overwrite")
-            actual_path = shutil.move(path, destination)
+                    os.remove(new_path)
+            actual_path = shutil.move(path, new_path)
             # Always '/' (also on Windows): the paths are used in other steps
             moved.append(Path(actual_path).as_posix())
         set_output("paths", moved)
