@@ -1,10 +1,18 @@
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shutil
 from typing import List
 
 from prepare_toolbox.core import get_input, set_failed, debug, set_output
 from prepare_toolbox.file import get_matching_files
+
+
+def __behind_symlink(path: str) -> bool:
+    """
+    Whether the path is inside a symbolic link to a directory (e.g. 'in/link/file' with 'in/link -> ../..').
+    Moving it would take a file out of the link's target, which can be outside the working directory.
+    """
+    return any(os.path.islink(parent) for parent in PurePosixPath(path).parents if str(parent) != ".")
 
 
 def move() -> None:
@@ -27,6 +35,11 @@ def move() -> None:
         if len(files) == 0:
             set_failed(f"'{source}' doesn't match any files")
         debug(f"Glob: {source}, matched files: {files}")
+        # Never follow symbolic links: only a link itself is moved, not what it points to
+        for path in list(files):
+            if __behind_symlink(path):
+                debug(f"Skipping '{path}', it is inside a symbolic link")
+                files.remove(path)
         if len(files) > 1 and not os.path.isdir(destination):
             # Otherwise every file is moved onto the same path and all but the last one are lost
             set_failed(f"'{source}' matches {len(files)} files, the destination "
