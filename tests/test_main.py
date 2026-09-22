@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -145,3 +146,69 @@ def test_several_files_to_non_directory_fails(destination: str, project: Path, m
     assert (project / "in" / "b.txt").read_text() == "in/b.txt"
     assert (project / "test.txt").read_text() == "test.txt"
     assert not (project / "new.txt").exists()
+
+
+def symlink(link: Path, target: str, directory: bool = False) -> None:
+    try:
+        # On Windows a link to a directory is only a directory link with target_is_directory, and the
+        # target has to use the platform separator to be resolved
+        link.symlink_to(target.replace("/", os.sep), target_is_directory=directory)
+    except OSError:  # pragma: no cover
+        pytest.skip("Creating symbolic links is not allowed (Windows without developer mode)")
+
+
+@pytest.fixture
+def linked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """
+    tmp_path
+    |- outside
+    |  |- secret.txt
+    |- project
+       |- dest
+       |- in
+          |- a.txt
+          |- dir-link -> ../../outside
+    """
+    (tmp_path / "outside").mkdir()
+    (tmp_path / "outside" / "secret.txt").write_text("secret")
+    (tmp_path / "project" / "dest").mkdir(parents=True)
+    (tmp_path / "project" / "in").mkdir()
+    (tmp_path / "project" / "in" / "a.txt").write_text("a")
+    symlink(tmp_path / "project" / "in" / "dir-link", "../../outside", directory=True)
+    monkeypatch.chdir(tmp_path / "project")
+    return tmp_path
+
+
+@pytest.mark.parametrize("source", ["in/**/*.txt", "in/dir-link/*"])
+def test_files_behind_symlink_are_not_moved(source: str, linked: Path, monkeypatch: pytest.MonkeyPatch,
+                                            mocker: MockerFixture) -> None:
+    """Globs followed symbolic links and moved files out of a directory outside the working directory"""
+    set_inputs(monkeypatch, source=source, destination="dest")
+    set_output = mocker.patch("prepare_move.main.set_output")
+    mocker.spy(move_main, "set_failed")
+    move()
+    assert (linked / "outside" / "secret.txt").read_text() == "secret"
+    assert not any("secret" in path for path in moved(set_output))
+
+
+def test_symlink_itself_is_moved(linked: Path, monkeypatch: pytest.MonkeyPatch, mocker: MockerFixture) -> None:
+    set_inputs(monkeypatch, source="in/dir-link", destination="dest")
+    set_output = mocker.patch("prepare_move.main.set_output")
+    move()
+    assert moved(set_output) == ["dest/dir-link"]
+    assert (linked / "project" / "dest" / "dir-link").is_symlink()
+    assert not (linked / "project" / "in" / "dir-link").exists()
+    assert (linked / "outside" / "secret.txt").read_text() == "secret"
+
+
+def test_files_behind_symlink_do_not_count_as_several_files(linked: Path, monkeypatch: pytest.MonkeyPatch,
+                                                            mocker: MockerFixture) -> None:
+    """'in/**/*.txt' matches a.txt and the secret.txt behind the link: only a.txt is really moved"""
+    set_inputs(monkeypatch, source="in/**/*.txt", destination="renamed.txt")
+    set_output = mocker.patch("prepare_move.main.set_output")
+    failed = mocker.spy(move_main, "set_failed")
+    move()
+    failed.assert_not_called()
+    assert moved(set_output) == ["renamed.txt"]
+    assert (linked / "project" / "renamed.txt").read_text() == "a"
+    assert (linked / "outside" / "secret.txt").read_text() == "secret"
