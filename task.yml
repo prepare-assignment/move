@@ -3,7 +3,7 @@ name: "Move"
 description: "Move files"
 inputs:
   source:
-    description: "File to move (glob)"
+    description: "Files/directories to move (glob)"
     required: true
   destination:
     description: "Destination to move to"

@@ -1,8 +1,8 @@
-# Move action
+# Move
 
 This action moves files/directories. The action is modeled after the linux `mv` command. For more information see the [man page](https://linux.die.net/man/1/mv).
 
-However unlike the `mv` command, it will not overwrite files/directories by default.
+Like `mv`, an existing destination is overwritten; set `force: false` to fail instead.
 
 ## Options
 
@@ -10,7 +10,7 @@ The following options are available:
 
 ```yaml
 source:
-  description: "File to move (glob)"
+  description: "Files/directories to move (glob)"
   required: true
 destination:
   description: "Destination to move to"
@@ -32,6 +32,15 @@ include-hidden:
 - `source`: a glob that can match a file, multiple files or a directory
 - `destination`: a glob that can be a file (rename) or directory
 - `force`: overwrite if the destination file already exists, default to `true` to mimic the `mv` command
+
+## How files and directories are moved
+
+- A **file** is moved into the destination if it's an existing directory, otherwise to the destination itself (e.g. to rename it).
+- If the glob matches **several paths**, the destination must be an existing directory.
+- A **directory** is moved into the destination if it's an existing directory (`in` → `out/in`), or renamed to the destination if it doesn't exist.
+- With `force` (the default) an existing destination is overwritten; with `force: false` the task fails instead. A file never replaces a directory and a directory never replaces a file, like `mv`.
+- Everything is checked before anything is moved, so a failing task doesn't leave half of the files moved.
+- **Symbolic links** are moved themselves; files inside a linked directory are not moved (they belong to the link's target).
 
 ## Outputs
 
