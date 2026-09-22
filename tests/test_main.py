@@ -147,9 +147,10 @@ def test_several_files_to_non_directory_fails(destination: str, project: Path, m
     assert not (project / "new.txt").exists()
 
 
-def symlink(link: Path, target: str) -> None:
+def symlink(link: Path, target: str, directory: bool = False) -> None:
     try:
-        link.symlink_to(target)
+        # On Windows a link to a directory is only a directory link with target_is_directory
+        link.symlink_to(target, target_is_directory=directory)
     except OSError:  # pragma: no cover
         pytest.skip("Creating symbolic links is not allowed (Windows without developer mode)")
 
@@ -171,7 +172,7 @@ def linked(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     (tmp_path / "project" / "dest").mkdir(parents=True)
     (tmp_path / "project" / "in").mkdir()
     (tmp_path / "project" / "in" / "a.txt").write_text("a")
-    symlink(tmp_path / "project" / "in" / "dir-link", "../../outside")
+    symlink(tmp_path / "project" / "in" / "dir-link", "../../outside", directory=True)
     monkeypatch.chdir(tmp_path / "project")
     return tmp_path
 
