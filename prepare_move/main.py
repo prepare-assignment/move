@@ -36,7 +36,8 @@ def move() -> None:
                 if os.path.exists(new_path) and not force:
                     set_failed(f"'{new_path}' already exists, use 'force' to overwrite")
             actual_path = shutil.move(path, destination)
-            moved.append(actual_path)
+            # Always '/' (also on Windows): the paths are used in other steps
+            moved.append(Path(actual_path).as_posix())
         set_output("paths", moved)
     except Exception as e:
         set_failed(e)
