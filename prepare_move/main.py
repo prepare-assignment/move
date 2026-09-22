@@ -24,6 +24,8 @@ def move() -> None:
         # ignore nonexistent files and arguments
         force = get_input("force")
         allow_outside = get_input("allow-outside-working-directory")
+        # also match hidden files and directories with wildcards
+        include_hidden = get_input("include-hidden")
 
         moved: List[str] = []
 
@@ -31,7 +33,7 @@ def move() -> None:
             # This will raise an error if the destination is outside the current working directory
             Path(os.path.abspath(destination)).relative_to(os.getcwd())
         files = get_matching_files(source, excluded=None, relative_to=None, recursive=True,
-                                   allow_outside_working_dir=allow_outside)
+                                   allow_outside_working_dir=allow_outside, include_hidden=bool(include_hidden))
         if len(files) == 0:
             set_failed(f"'{source}' doesn't match any files")
         debug(f"Glob: {source}, matched files: {files}")

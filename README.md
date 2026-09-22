@@ -19,6 +19,14 @@ force:
   description: "Force the move (overwrite)"
   type: boolean
   default: true
+allow-outside-working-directory:
+  description: "Allow destination/matched files to be outside the working directory"
+  type: boolean
+  default: false
+include-hidden:
+  description: "Also match hidden files and directories (starting with a '.') with wildcards such as '*' and '**'"
+  type: boolean
+  default: false
 ```
 
 - `source`: a glob that can match a file, multiple files or a directory

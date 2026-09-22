@@ -16,6 +16,10 @@ inputs:
     description: "Allow destination/matched files to be outside the working directory"
     type: boolean
     default: false
+  include-hidden:
+    description: "Also match hidden files and directories (starting with a '.') with wildcards such as '*' and '**'"
+    type: boolean
+    default: false
 outputs:
   paths:
     description: The new paths
