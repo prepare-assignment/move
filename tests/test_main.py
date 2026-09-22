@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -149,8 +150,9 @@ def test_several_files_to_non_directory_fails(destination: str, project: Path, m
 
 def symlink(link: Path, target: str, directory: bool = False) -> None:
     try:
-        # On Windows a link to a directory is only a directory link with target_is_directory
-        link.symlink_to(target, target_is_directory=directory)
+        # On Windows a link to a directory is only a directory link with target_is_directory, and the
+        # target has to use the platform separator to be resolved
+        link.symlink_to(target.replace("/", os.sep), target_is_directory=directory)
     except OSError:  # pragma: no cover
         pytest.skip("Creating symbolic links is not allowed (Windows without developer mode)")
 
