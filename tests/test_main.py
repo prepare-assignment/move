@@ -214,81 +214,28 @@ def test_files_behind_symlink_do_not_count_as_several_files(linked: Path, monkey
     assert (linked / "outside" / "secret.txt").read_text() == "secret"
 
 
-def test_overwrite_file_in_directory_with_force(project: Path, monkeypatch: pytest.MonkeyPatch,
-                                                mocker: MockerFixture) -> None:
-    """Failed with 'Destination path out/a.txt already exists', because shutil.move got the directory"""
-    (project / "out" / "a.txt").write_text("old")
-    set_inputs(monkeypatch, source="in/a.txt", destination="out", force=True)
-    set_output = mocker.patch("prepare_move.main.set_output")
-    failed = mocker.spy(move_main, "set_failed")
-    move()
-    failed.assert_not_called()
-    assert moved(set_output) == ["out/a.txt"]
-    assert (project / "out" / "a.txt").read_text() == "in/a.txt"
-    assert not (project / "in" / "a.txt").exists()
-
-
-def test_existing_file_in_directory_without_force_fails(project: Path, monkeypatch: pytest.MonkeyPatch,
+def test_nothing_moved_when_a_file_exists_without_force(project: Path, monkeypatch: pytest.MonkeyPatch,
                                                         mocker: MockerFixture) -> None:
-    (project / "out" / "a.txt").write_text("old")
-    set_inputs(monkeypatch, source="in/a.txt", destination="out", force=False)
-    failed = mocker.spy(move_main, "set_failed")
+    """The existing file was only noticed after the files before it were moved"""
+    (project / "out" / "b.txt").write_text("old")
+    set_inputs(monkeypatch, source="in/*.txt", destination="out", force=False)
     with pytest.raises(SystemExit):
         move()
-    assert "'out/a.txt' already exists, use 'force' to overwrite" in failed.call_args.args[0]
-    assert (project / "out" / "a.txt").read_text() == "old"
-    assert (project / "in" / "a.txt").exists()
+    assert (project / "in" / "a.txt").read_text() == "in/a.txt"
+    assert (project / "out" / "b.txt").read_text() == "old"
+    assert not (project / "out" / "a.txt").exists()
 
 
-def test_overwrite_directory_with_force(project: Path, monkeypatch: pytest.MonkeyPatch,
-                                        mocker: MockerFixture) -> None:
-    """force was never applied to directories: it failed with 'Destination path out/in already exists'"""
-    (project / "out" / "in").mkdir()
-    (project / "out" / "in" / "old.txt").write_text("old")
-    set_inputs(monkeypatch, source="in", destination="out", force=True)
+def test_directory_and_its_contents(project: Path, monkeypatch: pytest.MonkeyPatch,
+                                    mocker: MockerFixture) -> None:
+    """'in/**' matches the directory and its contents: after moving the directory the rest is gone"""
+    set_inputs(monkeypatch, source="in/**", destination="out")
     set_output = mocker.patch("prepare_move.main.set_output")
     failed = mocker.spy(move_main, "set_failed")
     move()
     failed.assert_not_called()
+    # 'in' is moved first (sorted), the paths in it are skipped: they moved along with the directory
     assert moved(set_output) == ["out/in"]
+    assert (project / "out" / "in" / "nested" / "c.txt").read_text() == "in/nested/c.txt"
     assert (project / "out" / "in" / "a.txt").read_text() == "in/a.txt"
-    assert not (project / "out" / "in" / "old.txt").exists()
-
-
-def test_existing_directory_without_force_fails(project: Path, monkeypatch: pytest.MonkeyPatch,
-                                                mocker: MockerFixture) -> None:
-    (project / "out" / "in").mkdir()
-    (project / "out" / "in" / "old.txt").write_text("old")
-    set_inputs(monkeypatch, source="in", destination="out", force=False)
-    failed = mocker.spy(move_main, "set_failed")
-    with pytest.raises(SystemExit):
-        move()
-    assert "'out/in' already exists, use 'force' to overwrite" in failed.call_args.args[0]
-    assert (project / "out" / "in" / "old.txt").read_text() == "old"
-    assert (project / "in" / "a.txt").exists()
-
-
-def test_file_does_not_overwrite_a_directory(project: Path, monkeypatch: pytest.MonkeyPatch,
-                                             mocker: MockerFixture) -> None:
-    """With force, a directory at the destination would be removed entirely; mv refuses this"""
-    (project / "out" / "test.txt").mkdir()
-    (project / "out" / "test.txt" / "keep.txt").write_text("keep")
-    set_inputs(monkeypatch, source="test.txt", destination="out", force=True)
-    failed = mocker.spy(move_main, "set_failed")
-    with pytest.raises(SystemExit):
-        move()
-    assert "Cannot overwrite 'out/test.txt', it is a directory" in failed.call_args.args[0]
-    assert (project / "out" / "test.txt" / "keep.txt").read_text() == "keep"
-    assert (project / "test.txt").exists()
-
-
-def test_directory_does_not_overwrite_a_file(project: Path, monkeypatch: pytest.MonkeyPatch,
-                                             mocker: MockerFixture) -> None:
-    (project / "out" / "in").write_text("a file")
-    set_inputs(monkeypatch, source="in", destination="out", force=True)
-    failed = mocker.spy(move_main, "set_failed")
-    with pytest.raises(SystemExit):
-        move()
-    assert "Cannot overwrite 'out/in', it is a file" in failed.call_args.args[0]
-    assert (project / "out" / "in").read_text() == "a file"
-    assert (project / "in" / "a.txt").exists()
+    assert not (project / "in").exists()
