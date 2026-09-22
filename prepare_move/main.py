@@ -27,6 +27,10 @@ def move() -> None:
         if len(files) == 0:
             set_failed(f"'{source}' doesn't match any files")
         debug(f"Glob: {source}, matched files: {files}")
+        if len(files) > 1 and not os.path.isdir(destination):
+            # Otherwise every file is moved onto the same path and all but the last one are lost
+            set_failed(f"'{source}' matches {len(files)} files, the destination "
+                       f"'{Path(destination).as_posix()}' must be an existing directory")
         for path in files:
             if os.path.isfile(path):
                 if os.path.isdir(destination):

@@ -128,3 +128,20 @@ def test_destination_outside_working_directory_fails(project: Path, monkeypatch:
     with pytest.raises(SystemExit):
         move()
     assert (project / "test.txt").exists()
+
+
+@pytest.mark.parametrize("destination", ["new.txt", "test.txt", "missing/dir"])
+def test_several_files_to_non_directory_fails(destination: str, project: Path, monkeypatch: pytest.MonkeyPatch,
+                                              mocker: MockerFixture) -> None:
+    """Every file was moved onto the same path: all but the last one were lost"""
+    set_inputs(monkeypatch, source="in/*.txt", destination=destination)
+    failed = mocker.spy(move_main, "set_failed")
+    with pytest.raises(SystemExit):
+        move()
+    assert (f"'in/*.txt' matches 2 files, the destination '{destination}' must be an existing directory"
+            in failed.call_args.args[0])
+    # Nothing is moved: the source files are still there
+    assert (project / "in" / "a.txt").read_text() == "in/a.txt"
+    assert (project / "in" / "b.txt").read_text() == "in/b.txt"
+    assert (project / "test.txt").read_text() == "test.txt"
+    assert not (project / "new.txt").exists()
