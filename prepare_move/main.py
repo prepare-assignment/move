@@ -1,7 +1,7 @@
 import os
 from pathlib import Path, PurePosixPath
 import shutil
-from typing import List
+from typing import List, Tuple
 
 from prepare_toolbox.core import get_input, set_failed, debug, set_output
 from prepare_toolbox.file import get_matching_files
@@ -44,6 +44,8 @@ def move() -> None:
             # Otherwise every file is moved onto the same path and all but the last one are lost
             set_failed(f"'{source}' matches {len(files)} files, the destination "
                        f"'{Path(destination).as_posix()}' must be an existing directory")
+        # First check everything, then move: a failing task doesn't leave half of the files moved
+        plan: List[Tuple[str, str]] = []
         for path in files:
             # Into the destination if it's a directory, otherwise to the destination itself (rename)
             if os.path.isdir(destination):
@@ -57,6 +59,14 @@ def move() -> None:
                 if os.path.isdir(new_path) != os.path.isdir(path):
                     kind = "a directory" if os.path.isdir(new_path) else "a file"
                     set_failed(f"Cannot overwrite '{Path(new_path).as_posix()}', it is {kind}")
+            plan.append((path, new_path))
+
+        for path, new_path in plan:
+            if not os.path.exists(path):
+                # Already moved with a directory it is in (e.g. 'in/**' matches 'in' and 'in/a.txt')
+                debug(f"Skipping '{path}', it was moved with the directory it is in")
+                continue
+            if os.path.exists(new_path):
                 # shutil.move doesn't overwrite an existing path, remove it first
                 if os.path.isdir(new_path) and not os.path.islink(new_path):
                     shutil.rmtree(new_path)
